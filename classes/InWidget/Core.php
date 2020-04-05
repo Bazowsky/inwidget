@@ -165,6 +165,7 @@ class Core
         if (empty($this->data)) {
             $this->apiQuery();
             $this->createCache();
+            if ($this->config['cacheImages'] === true) $this->createImageCache();
             $this->data = json_decode(file_get_contents($this->getCacheFilePath()));
         }
         if (!is_object($this->data)) {
@@ -249,6 +250,20 @@ class Core
         $data = json_encode($this->prepareData());
         file_put_contents($this->getCacheFilePath(), $data, LOCK_EX);
         file_put_contents($this->getCacheFilePath() . '_backup', $data, LOCK_EX);
+    }
+
+    /**
+      * @return null
+      */
+    private function createImageCache()
+    {
+        foreach (glob($this->cachePath . "*.jpg") as $file) {
+            unlink($file);
+        }
+        $data = $this->prepareData();
+        foreach ($data['images'] as $mediaImg) {
+            file_put_contents($this->cachePath . 'cacheImg_' . $mediaImg['id'] . '.jpg' , file_get_contents($mediaImg['fullsize']));
+        }
     }
 
     /**
